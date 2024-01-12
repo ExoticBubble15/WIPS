@@ -1,0 +1,110 @@
+import java.util.*;
+import java.util.ArrayList;
+
+public class DormBuilding {
+
+    public class DormRoom{
+
+        private int roomNumber;
+        private int maxCapacity;
+        private int currentCapacity;
+        private Student[] occupants;
+    
+        public DormRoom(int roomNumber, int maxCapacity) {
+            this.roomNumber = roomNumber;
+            this.maxCapacity = maxCapacity;
+            currentCapacity = 0;
+            occupants = new Student[maxCapacity];
+        }
+    
+        public void addRoomate(Student student) {
+            if(isRoom()) {
+                occupants[currentCapacity] = student;
+                currentCapacity++;
+            }
+        }
+
+        //will only work if currentCapacity is 0 as to prevent shenanigans
+        public void setMaxCapacity(int newMax) {
+            if(currentCapacity == 0) {
+                maxCapacity = newMax;
+                occupants = new Student[newMax];
+            }
+        }
+
+        public boolean isRoom() {
+            return currentCapacity < maxCapacity;
+        }
+
+        public String toString() {
+            return ("Building: " + buildingName +
+            "\nRoom: " + roomNumber + 
+            "\nCapacity: " + currentCapacity + "/" + maxCapacity + 
+            "\nOccupants: " + Arrays.toString(occupants));
+        }
+    }
+
+    private String buildingName;
+    private ArrayList<DormBuilding.DormRoom> rooms;
+
+    public DormBuilding() {
+    }
+
+    public DormBuilding(String buildingName) {
+        this.buildingName = buildingName;
+        rooms = new ArrayList<DormBuilding.DormRoom>();
+    }
+
+    public void addRoom(DormRoom room) {
+        if(getRoom(room.roomNumber) == null) { //ensures each room number is unique
+            for(int i = 0; i < rooms.size(); i++) {
+                if(rooms.get(i).roomNumber > room.roomNumber) { //O(n^2), adds a room in sequential order
+                    rooms.add(i, room);
+                    return;
+                }
+            }
+            rooms.add(room);
+        }
+    }
+
+    public void removeRoom(int roomNumber) {
+        rooms.remove(getRoom(roomNumber));
+    }
+
+    public DormRoom getRoom(int roomNumber) {
+        for(DormRoom i: rooms) {
+            if(i.roomNumber == roomNumber) {
+                return i;
+            }
+        }
+        return null;
+    }
+
+    public void modifyRoomCapacity(int roomNumber, int newCapacity) {
+        getRoom(roomNumber).setMaxCapacity(newCapacity);
+    }
+
+    public String toString() {
+        String retString = "Building: " + buildingName + 
+        "\nRooms: ";
+        for(DormRoom i: rooms) {
+            retString += i.roomNumber + ", ";
+        }
+        return retString;
+    }
+
+    public void printRoomsCapacity() {
+        String retString = "Building: " + buildingName + 
+        "\nRooms: ";
+        for(DormRoom i: rooms) {
+            retString += i.roomNumber + " (" + i.currentCapacity + "/" + i.maxCapacity + "), ";
+        }
+        System.out.println(retString);
+    }
+
+    public void getAllRoomDetails() {
+        for(DormRoom i: rooms) {
+            System.out.println(i + "\n");
+        }
+    }
+}
