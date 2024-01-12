@@ -1,0 +1,74 @@
+import cv2
+from PIL import ImageGrab, Image
+import numpy as np
+import random
+
+def createCapture(boxCords):
+    img = ImageGrab.grab(bbox=(boxCords[0], boxCords[1], boxCords[2], boxCords[3]))
+    img = np.array(img)
+    return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+def colorFilter(img, rgb, tolerance):
+    r = rgb[0]
+    g = rgb[1]
+    b = rgb[2]
+    lowerBound = np.array([b-tolerance,g-tolerance,r-tolerance])
+    upperBound = np.array([b+tolerance,g+tolerance,r+tolerance])
+    return cv2.inRange(img, lowerBound, upperBound)
+
+FISHINGBOX = [893,203,919,756]
+FISHINGBOXWIDTH = FISHINGBOX[2]-FISHINGBOX[0]
+FISHINGBOXHEIGHT = FISHINGBOX[3]-FISHINGBOX[1]
+
+while True:
+    # fishingBar = ImageGrab.grab(bbox=(893,203,919,756))
+    # fishingBar = np.array(fishingBar)
+    # fishingBar = cv2.cvtColor(fishingBar, cv2.COLOR_BGR2RGB)
+    fishingBar = createCapture(FISHINGBOX)
+
+    # fish = ImageGrab.grab(bbox=(893,203,919,756))
+    # fish = np.array(fish)
+    # fish = cv2.cvtColor(fish, cv2.COLOR_BGR2RGB)
+    fish = createCapture(FISHINGBOX)
+    fish = colorFilter(fish,[29,179,176],20)
+
+    try:
+        Y, X = np.where(fish==[255])
+        fishTrackY = int(sum(Y)/len(Y))
+        fishingBar = cv2.circle(fishingBar,((int(FISHINGBOXWIDTH/2)), fishTrackY),10,[31,95,255],3)
+    except:
+        fishTrackY = None
+        pass
+
+    # catchZoneIn = ImageGrab.grab(bbox=(893,203,919,756))
+    # catchZoneIn = np.array(catchZoneIn)
+    # catchZoneIn = cv2.cvtColor(catchZoneIn, cv2.COLOR_BGR2RGB)
+    catchZoneIn = createCapture(FISHINGBOX)
+    catchZoneIn = colorFilter(catchZoneIn,[130,228,0],5)
+
+    try:
+        Y, X = np.where(catchZoneIn==[255])
+        upperZoneY = min(Y)
+        lowerZoneY = max(Y)
+        fishingBar = cv2.rectangle(fishingBar, (0, upperZoneY), (FISHINGBOXWIDTH, upperZoneY), [31,95,255], 3) #upper
+        fishingBar = cv2.rectangle(fishingBar, (0, lowerZoneY), (FISHINGBOXWIDTH, lowerZoneY), [31,95,255], 3) #lower
+    except:
+        upperZoneY = None
+        lowerZoneY = None
+        pass
+
+    if fishTrackY != None and upperZoneY != None and fishTrackY >= upperZoneY and fishTrackY <= lowerZoneY:
+        print(f"CATCHING...{random.randint(1,10)}")
+    else:
+        print(f"NOTHING...{random.randint(1,10)}")
+
+
+    cv2.imshow("image0", fishingBar)
+    cv2.imshow("image1", fish)
+    cv2.imshow("image2", catchZoneIn)
+    # cv2.imshow("image3", )
+
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+cv2.destroyAllWindows()
