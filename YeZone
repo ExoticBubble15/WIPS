@@ -1,0 +1,44 @@
+#http://www.kanyezone.com/
+import cv2
+from PIL import ImageGrab, Image
+import numpy
+
+def filterColors(img, lower, upper):
+    #in range is white
+    #img = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
+
+    lowerBound = numpy.array(lower)
+    upperBound = numpy.array(upper)
+
+    return cv2.inRange(img, lowerBound, upperBound)
+
+def detect(img):
+    try:
+        Y, X = numpy.where(BWgameZone==255)
+        xAvg = int((sum(X)+0.5)/len(X))
+        yAvg = int((sum(Y)+0.5)/len(Y))
+        return (xAvg, yAvg)
+    except:
+        return center
+
+center = (224, 128)
+while True:
+    gameZone = ImageGrab.grab(bbox=(739, 291, 1189, 741))
+    gameZone = numpy.array(gameZone)
+    gameZone = cv2.cvtColor(gameZone, cv2.COLOR_BGR2RGB)
+
+    BWgameZone = filterColors(cv2.cvtColor(gameZone, cv2.COLOR_RGB2HSV), [0, 88, 137], [50, 255, 255])
+    cv2.imshow('block', BWgameZone)
+
+    center = detect(BWgameZone)
+    gameZone = cv2.circle(gameZone, center, 3, [255, 255, 255], 5)
+    cv2.imshow('game', gameZone)
+
+    # yeTrack = filterColors(gameZone, [0, 8, 13], [20, 255, 255])
+    # cv2.imshow('ye', yeTrack)
+
+    test = filterColors(gameZone, [70,0,0], [255, 255, 255])
+    cv2.imshow('test', test)
+
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
