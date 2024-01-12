@@ -1,0 +1,19 @@
+import java.util.*;
+
+public class Student extends DormBuilding{
+
+    private String name;
+    private Student[] requestedRoomates;
+    private String additional;
+
+    public Student() {
+    }
+
+    public Student(String name) {
+        this.name = name;
+    }
+
+    public String toString() {
+        return name;
+    }
+}
