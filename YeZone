@@ -1,44 +1,46 @@
 #http://www.kanyezone.com/
 import cv2
 from PIL import ImageGrab, Image
-import numpy
+import numpy as np
 
-def filterColors(img, lower, upper):
-    #in range is white
-    #img = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
+def createCapture(boxCords):
+    #upper left, bottom right
+    img = ImageGrab.grab(bbox=(boxCords[0], boxCords[1], boxCords[2], boxCords[3]))
+    img = np.array(img)
+    return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-    lowerBound = numpy.array(lower)
-    upperBound = numpy.array(upper)
-
+def colorFilter(img, rgb, tolerance):
+    r = rgb[0]
+    g = rgb[1]
+    b = rgb[2]
+    lowerBound = np.array([b-tolerance,g-tolerance,r-tolerance])
+    upperBound = np.array([b+tolerance,g+tolerance,r+tolerance])
     return cv2.inRange(img, lowerBound, upperBound)
 
-def detect(img):
-    try:
-        Y, X = numpy.where(BWgameZone==255)
-        xAvg = int((sum(X)+0.5)/len(X))
-        yAvg = int((sum(Y)+0.5)/len(Y))
-        return (xAvg, yAvg)
-    except:
-        return center
+PLAYZONECOORDS = [328,403,888,965]
 
-center = (224, 128)
 while True:
-    gameZone = ImageGrab.grab(bbox=(739, 291, 1189, 741))
-    gameZone = numpy.array(gameZone)
-    gameZone = cv2.cvtColor(gameZone, cv2.COLOR_BGR2RGB)
+    playZone = createCapture(PLAYZONECOORDS)
 
-    BWgameZone = filterColors(cv2.cvtColor(gameZone, cv2.COLOR_RGB2HSV), [0, 88, 137], [50, 255, 255])
-    cv2.imshow('block', BWgameZone)
+    ye = createCapture(PLAYZONECOORDS)
+    ye = colorFilter(ye,[142,99,56],35)
+    try:
+        Y,X = np.where(ye==[255])
+        ye = cv2.rectangle(ye,(min(X),min(Y)),(max(X),max(Y)),[31,95,255],2)
+    except:
+        pass
 
-    center = detect(BWgameZone)
-    gameZone = cv2.circle(gameZone, center, 3, [255, 255, 255], 5)
-    cv2.imshow('game', gameZone)
+    player = createCapture(PLAYZONECOORDS)
+    player = colorFilter(player,[100,161,252],20)
+    try:
+        Y,X = np.where(player==[255])
+        xAvg = sum(X)//len(X)
+        yAvg = sum(Y)//len(X)
+        player = cv2.circle(player,(xAvg, yAvg),(max(Y)-min(Y))//2,[31,95,255],2)
+    except:
+        pass    
 
-    # yeTrack = filterColors(gameZone, [0, 8, 13], [20, 255, 255])
-    # cv2.imshow('ye', yeTrack)
-
-    test = filterColors(gameZone, [70,0,0], [255, 255, 255])
-    cv2.imshow('test', test)
+    cv2.imshow("", ye)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
