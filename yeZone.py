@@ -32,7 +32,7 @@ def updateCoordsList(pos):
                     if(yeCoordsList[-1][1]-yeCoordsList[-2][1] > 0 and pos[1]-yeCoordsList[-1][1] > 0) or (yeCoordsList[-1][1]-yeCoordsList[-2][1] < 0 and pos[1]-yeCoordsList[-1][1] < 0): #moving same y direction
                         yeCoordsList.append(pos)
                         return
-        print("direction change")
+        # print("direction change")
         yeCoordsList.clear()
         yeCoordsList.append(pos)
 
@@ -43,16 +43,11 @@ def generateTrajectory():
     m, b = np.polyfit(xVals, yVals, 1)
 
     endPoint = [xVals[-1], yVals[-1]]
-
     if xVals[-1] > xVals[-2]: #moving right
-        endPoint[1] = m*(xVals[-1]+XLEN)+b
+        endPoint[0] = PLAYZONECOORDS[2]+PLAYZONECOORDS[0]
     else: #moving left
-        endPoint[1] = m*(xVals[-1]-XLEN)+b
-
-    if yVals[-1] > yVals[-2]: #moving down
-        endPoint[0] = (yVals[-1]+YLEN-b)/m
-    else: #moving up
-        endPoint[0] = (yVals[-1]-YLEN-b)/m
+        endPoint[0] = 0
+    endPoint[1] = m*endPoint[0]+b
 
     return (int(endPoint[0]), int(endPoint[1]))
 
