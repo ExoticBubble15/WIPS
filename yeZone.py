@@ -22,28 +22,36 @@ def getCenter(img):
     Y, X = np.where(img==[255])
     return ((sum(X)//len(X)), (sum(Y)//len(Y)))
 
-#will add current position to yeCoordsList if still moving in the same direction
-def updateCoordsList(pos):
-    if len(yeCoordsList)==0 or (len(yeCoordsList)==1 and yeCoordsList[0] != pos):
-        yeCoordsList.append(pos)
+#adds current position to position arrays if moving in same direction, resets otherwise
+def updateCoords(pos):
+    if len(yeXCoords) == 0 or (len(yeXCoords) == 1 and yeXCoords[0] != pos[0]):
+        addCoords(pos)
     else:
-        if yeCoordsList[-1] != pos:
-            if(yeCoordsList[-1][0]-yeCoordsList[-2][0] > 0 and pos[0]-yeCoordsList[-1][0] > 0) or (yeCoordsList[-1][0]-yeCoordsList[-2][0] < 0 and pos[0]-yeCoordsList[-1][0] < 0): #moving same x direction
-                    if(yeCoordsList[-1][1]-yeCoordsList[-2][1] > 0 and pos[1]-yeCoordsList[-1][1] > 0) or (yeCoordsList[-1][1]-yeCoordsList[-2][1] < 0 and pos[1]-yeCoordsList[-1][1] < 0): #moving same y direction
-                        yeCoordsList.append(pos)
-                        return
-        # print("direction change")
-        yeCoordsList.clear()
-        yeCoordsList.append(pos)
+        if yeXCoords[-1] != pos[0]:
+            if (yeXCoords[-1]-yeXCoords[-2] > 0 and pos[0]-yeXCoords[-1] > 0) or (yeXCoords[-1]-yeXCoords[-2] < 0 and pos[0]-yeXCoords[-1] < 0): #moving same x direction
+                if (yeYCoords[-1]-yeYCoords[-2] > 0 and pos[1]-yeYCoords[-1] > 0) or (yeYCoords[-1]-yeYCoords[-2] < 0 and pos[1]-yeYCoords[-1] < 0): #moving same y direction
+                    addCoords(pos)
+                    # printCoords()
+                    return
+        # print("DIRECTION CHANGE")
+        yeXCoords.clear()
+        yeYCoords.clear()
+        addCoords(pos)
+    # printCoords()
+        
+def addCoords(pos):
+    yeXCoords.append(pos[0])
+    yeYCoords.append(pos[1])
+
+def printCoords():
+    print(f'{[(yeXCoords[i],yeYCoords[i]) for i in range(len(yeXCoords))]}\n')
 
 #uses line of best fit to generate trajectory
 def generateTrajectory():
-    xVals = [i[0] for i in yeCoordsList]
-    yVals = [i[1] for i in yeCoordsList]
-    m, b = np.polyfit(xVals, yVals, 1)
+    m, b = np.polyfit(yeXCoords, yeYCoords, 1)
 
-    endPoint = [xVals[-1], yVals[-1]]
-    if xVals[-1] > xVals[-2]: #moving right
+    endPoint = [yeXCoords[-1], yeYCoords[-1]]
+    if yeXCoords[-1] > yeXCoords[-2]: #moving right
         endPoint[0] = PLAYZONECOORDS[2]+PLAYZONECOORDS[0]
     else: #moving left
         endPoint[0] = 0
@@ -55,7 +63,7 @@ PLAYZONECOORDS = [328, 403, 888, 965]
 XLEN = PLAYZONECOORDS[2]-PLAYZONECOORDS[0]
 YLEN = PLAYZONECOORDS[3]-PLAYZONECOORDS[1]
 
-yeCoordsList = []
+yeXCoords, yeYCoords = [], []
 while True:
     playZone = createCapture(PLAYZONECOORDS)
 
@@ -64,7 +72,7 @@ while True:
     #tracking ye position
     try:
         yePos = getCenter(ye)
-        updateCoordsList(yePos)
+        updateCoords(yePos)
         playZone = cv2.line(playZone, yePos, generateTrajectory(), [0,255,0], 2)
 
         #putting box around ye
